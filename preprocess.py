@@ -114,58 +114,6 @@ def preproc_album():
     fi_album.close()
     fo_album.close()
 
-# def preproc_train():
-#     trainIdx_file_in = os.path.join(source_dir, trainIdx)
-#     itemset_user_voted_file_out = os.path.join(store_dir, itemset_user_voted_data)
-#     userset_voted_item_file_out = os.path.join(store_dir, userset_voted_item_data)
-#     fi_train = open(trainIdx_file_in, 'r')
-#     fo_itemset_user_voted = open(itemset_user_voted_file_out, 'w')
-#     # fo_userset_voted_item = open(userset_voted_item_file_out, 'w')
-#     userId = 0
-#     userRatings = 0   # 用户的总评分数目
-#     userCurRating = 0 # 当前行是用户的第几个评分
-#     itemId = 0
-#     score = 0
-#     line_is_score = False
-#     for line in fi_train:
-#         line = line.rstrip('\n')
-#         if not line_is_score:
-#             seg_list = proc_line(line, '|')
-#             userId = seg_list[0]
-#             userRatings = int(seg_list[1])
-#             userCurRating = 0
-#             if not itemset_user_voted_dict.has_key(userId):
-#                 itemset_user_voted_dict[userId] = []
-#             line_is_score = True
-#         else:
-#             userCurRating += 1
-#             seg_list = proc_line(line, '\t')
-#             itemId = seg_list[0]
-#             score = int(seg_list[1])
-#             itemset_user_voted_dict[userId].append(itemId)
-#             if not userset_voted_item_dict.has_key(itemId):
-#                 userset_voted_item_dict[itemId] = []
-#             userset_voted_item_dict[itemId].append(userId)
-#             if userCurRating >= userRatings:
-#                 line_is_score = False
-#     for userId in itemset_user_voted_dict:
-#         itemset = itemset_user_voted_dict[userId]
-#         string = userId + ':'
-#         for itemId in itemset:
-#             string += itemId + ','
-#         string += '\n'
-#         fo_itemset_user_voted.write(string)
-#     # for itemId in userset_voted_item_dict:
-#     #     userset = userset_voted_item_dict[itemId]
-#     #     string = itemId + ':'
-#     #     for userId in userset:
-#     #         string += userId + ','
-#     #     string += '\n'
-#     #     fo_userset_voted_item.write(string)
-#     fi_train.close()
-#     fo_itemset_user_voted.close()
-#     # fo_userset_voted_item.close()
-
 def preproc_user_item():
     trainIdx_file_in = os.path.join(source_dir, trainIdx)
     user_item_file_out = os.path.join(store_dir, user_item_data)
