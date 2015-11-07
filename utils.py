@@ -1,4 +1,4 @@
-#encoding=utf-8
+#coding=utf-8
 
 def proc_line(line, sep):
     seg_list = line.split(sep)

@@ -1,7 +1,8 @@
-#encoding=utf-8
+#coding=utf-8
 
 from __future__ import division
-from dataset import get_itemset_topk, get_userset
+import math
+from dataset import get_itemset_topk, get_userset, get_simVal
 
 topK  = 50
 gamma = 0.65
@@ -23,10 +24,11 @@ def predict(userId, itemId):
         itemId2 = item[0]
         score = item[1]
         pred_score += sim(itemId, itemId2) * (1+score)**gamma
+        # pred_score += get_simVal(itemId, itemId2) * (1+score)**gamma
     return pred_score
 
 if __name__ == '__main__':
-    # sim = sim(1, 2)
+    # simVal = sim(1, 2)
     testCases = [188135, 250273, 60428, 187953, 108088, 52615]
     for case in testCases:
         pred_score = predict(1, case)

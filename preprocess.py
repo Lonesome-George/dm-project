@@ -1,29 +1,9 @@
-#encoding=utf-8
+#coding=utf-8
 
 import os
-import numpy as np
+from base import *
 from utils import proc_line
-
-source_dir = '../../KDDCup2011/dataset/Webscope_C15/ydata-ymusic-kddcup-2011-track2'
-trackData = 'trackData2.txt'
-albumData = 'albumData2.txt'
-artistData = 'artistData2.txt'
-genreData = 'genreData2.txt'
-trainIdx = 'trainIdx2.txt'
-testIdx = 'testIdx2.txt'
-stats = 'stats2.txt'
-
-store_dir = './data'
-track_data = 'track.txt'
-album_data = 'album.txt'
-artist_of_track_data = 'artist_of_track.txt'
-album_of_track_data  = 'album_of_track.txt'
-trackset_bto_artist_data = 'trackset_bto_artist.txt' # bto means belong to
-trackset_bto_album_data  = 'trackset_bto_album.txt'
-itemset_user_voted_data = 'itemset_user_voted.txt'
-userset_voted_item_data = 'userset_voted_item.txt'
-user_item_data = 'user_item.txt'
-item_user_data = 'item_user.txt'
+from itemcf_model import sim
 
 nUsers = 249012
 nItems = 296111
@@ -38,6 +18,7 @@ trackset_bto_artist_dict = dict() # {artistId:[trackId, trackId, ...], artistId:
 user_item_array = 0   # 2-dim matrix, means items user voted. row denotes userId,col denotes itemId
 item_user_array = 0   # 2-dim matrix, means users voted item. row denotes itemId,col denotes userId
 # item_total_array = 0  # item that voted for total number
+item_item_sim_array = 0 # 2-dim matrix, means item-item similarity.
 
 def add_to_track_set(trackId):
     track_set.add(trackId)
@@ -108,7 +89,6 @@ def preproc_album():
     for line in fi_album:
         line = line.rstrip('\n')
         seg_list = proc_line(line, '|')
-        # add_to_album_set(seg_list[0])
         string = seg_list[0] + '\n'
         fo_album.write(string)
     fi_album.close()
@@ -123,6 +103,7 @@ def preproc_user_item():
     itemset = []
     fi_train = open(trainIdx_file_in, 'r')
     fo_user_item = open(user_item_file_out, 'w')
+    lastUserId = -1 # 前一个user的Id值,userId并不是连续的
     userId = 0
     userRatings = 0   # 用户的总评分数目
     userCurRating = 0 # 当前行是用户的第几个评分
@@ -132,6 +113,11 @@ def preproc_user_item():
         if not line_is_score:
             seg_list = proc_line(line, '|')
             userId = int(seg_list[0])
+            if (lastUserId + 1) != userId: # userId遇到跳跃,为不存在的userId插入空行,方便以后根据userId快速定位文件行
+                for idx in range(lastUserId+1, userId):
+                    string = str(idx) + ':;\n'
+                    fo_user_item.write(string)
+            lastUserId = userId
             userRatings = int(seg_list[1])
             userCurRating = 0
             line_is_score = True
@@ -140,10 +126,6 @@ def preproc_user_item():
             seg_list = proc_line(line, '\t')
             itemId = int(seg_list[0])
             score = int(seg_list[1])
-            # if userCurRating == 1:
-            #     user_item_array[userId] = [0 for x in range(userRatings)]
-            # item = [itemId, score]
-            # user_item_array[userId][userCurRating-1] = item
             if userCurRating == 1:
                 itemset = []
             item = [itemId, score]
@@ -170,7 +152,7 @@ def preproc_item_user():
     item_user_file_out = os.path.join(store_dir, item_user_data)
     if os.path.isfile(item_user_file_out):
         return
-    item_item_array = [[] for x in range(nItems)]
+    item_user_array = [[] for x in range(nItems)]
     fi_train = open(trainIdx_file_in, 'r')
     fo_item_user = open(item_user_file_out, 'w')
     userId = 0
@@ -189,11 +171,11 @@ def preproc_item_user():
             userCurRating += 1
             seg_list = proc_line(line, '\t')
             itemId = int(seg_list[0])
-            item_item_array[itemId].append(userId)
+            item_user_array[itemId].append(userId)
             if userCurRating >= userRatings:
                 line_is_score = False
     for itemId in range(nItems):
-        userset = item_item_array[itemId]
+        userset = item_user_array[itemId]
         string = str(itemId) + ':'
         for userId in userset:
             string += str(userId) + ','
@@ -202,13 +184,32 @@ def preproc_item_user():
     fi_train.close()
     fo_item_user.close()
 
+def preproc_item_item_sim():
+    item_item_sim_file_out = os.path.join(store_dir, item_item_sim_data)
+    if os.path.isfile(item_item_sim_file_out):
+        return
+    item_item_sim_array = [[] for x in range(nItems)]
+    fo_item_item_sim = open(item_item_sim_file_out, 'w')
+    for itemId1 in range(nItems):
+        string = str(itemId1) + ':'
+        for itemId2 in range(itemId1+1, nItems):
+            simVal = sim(itemId1, itemId2) # 如果simVal为0,可以丢弃这一项
+            if simVal == 0.0:
+                continue
+            item = [itemId2, simVal]
+            item_item_sim_array[itemId1].append(item)
+            # string += str(itemId2) + ',' + str(simVal) + ';'
+            string += '%d,%.3f;' %(itemId2, simVal)
+        string += '\n'
+        fo_item_item_sim.write(string)
+    fo_item_item_sim.close()
+
 if __name__ == '__main__':
     # 创建存储目录
     if not os.path.isdir(store_dir):
         os.mkdir(store_dir)
 
     # 读取统计信息
-
 
     # 预处理track数据
     # preproc_track()
@@ -219,3 +220,6 @@ if __name__ == '__main__':
     # 预处理train数据
     preproc_user_item()
     preproc_item_user()
+
+    # 预处理生成并保存item-item的相似度
+    preproc_item_item_sim()

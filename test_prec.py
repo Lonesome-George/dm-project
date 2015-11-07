@@ -1,17 +1,20 @@
-#encoding=utf-8
+#coding=utf-8
 
 # 测试正确率
 
-import os
 from __future__ import division
-from preprocess import source_dir
+import os
+import time
+from base import source_dir, store_dir
 from utils import proc_line
 from itemcf_model import predict
 
-test_file = './testIdx2.txt'
+# test_file = 'testIdx2.txt'
+test_file = './testSet/test50.txt'
 
-if __name__ == '__main__':
-    test_file_in = os.path.join(source_dir, test_file)
+def test_prec():
+    # test_file_in = os.path.join(source_dir, test_file)
+    test_file_in = test_file
     fi_test = open(test_file_in, 'r')
     total_num_of_testCases = 0
     right_num_of_testCases = 0
@@ -29,6 +32,7 @@ if __name__ == '__main__':
             num_of_testCases = int(seg_list[1])
             total_num_of_testCases += num_of_testCases
             cur_testCase = 0
+            predCases = [[] for x in range(num_of_testCases)]
             line_is_score = True
         else:
             seg_list = proc_line(line, '\t')
@@ -45,6 +49,17 @@ if __name__ == '__main__':
                     itemId = predCases[i][0]
                     if testCases[itemId] != -1:
                         right_num_of_testCases += 2
+                predCases = []
                 line_is_score = False
+                print 'done with user ', userId
     fi_test.close()
     print 'precision: ' + str(right_num_of_testCases / total_num_of_testCases)
+
+
+ISOTIMEFORMAT = '%Y-%m-%d %X'
+
+if __name__ == '__main__':
+    start_time = time.strftime(ISOTIMEFORMAT, time.localtime(time.time()))
+    test_prec()
+    end_time = time.strftime(ISOTIMEFORMAT, time.localtime(time.time()))
+    print 'start at ', start_time, ',end at ', end_time, '.'
