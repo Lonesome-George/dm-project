@@ -10,7 +10,8 @@ from utils import proc_line
 from itemcf_model import predict
 
 # test_file = 'testIdx2.txt'
-test_file = './testSet/test50.txt'
+# test_file = './testSet/test50.txt'
+test_file = './testSet/test4000.txt'
 
 def test_prec():
     # test_file_in = os.path.join(source_dir, test_file)

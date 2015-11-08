@@ -21,3 +21,13 @@ userset_voted_item_data = 'userset_voted_item.txt'
 user_item_data = 'user_item.txt'
 item_user_data = 'item_user.txt'
 item_item_sim_data = 'item_item_sim.txt'
+
+co_rated_temp_dir = 'co_rated_sim' # temp dir for storing co_rated num
+co_rated_data_prefix = 'co_rated'
+item_voted_data = 'item_voted'
+
+nUsers = 249012
+nItems = 296111
+
+max_size  = 5000
+half_size = max_size / 2

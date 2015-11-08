@@ -1,7 +1,6 @@
 #coding=utf-8
 
 from __future__ import division
-import math
 from dataset import get_itemset_topk, get_userset, get_simVal
 
 topK  = 50
@@ -23,8 +22,8 @@ def predict(userId, itemId):
     for item in itemset:
         itemId2 = item[0]
         score = item[1]
-        pred_score += sim(itemId, itemId2) * (1+score)**gamma
-        # pred_score += get_simVal(itemId, itemId2) * (1+score)**gamma
+        # pred_score += sim(itemId, itemId2) * (1+score)**gamma
+        pred_score += get_simVal(itemId, itemId2) * (1+score)**gamma
     return pred_score
 
 if __name__ == '__main__':
