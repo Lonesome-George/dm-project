@@ -62,6 +62,9 @@ def get_itemset(userId):
 
 def get_itemset_topk(userId, topK):
     itemset = get_itemset(userId)
+    return topK_itemset(itemset, topK)
+
+def topK_itemset(itemset, topK):
     itemset = sorted(itemset, key=lambda x:x[1], reverse=True)
     max_idx = len(itemset) - 1 # 列表的最大下标
     new_itemset = []

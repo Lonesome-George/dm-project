@@ -5,7 +5,7 @@ import os
 import math
 from base import *
 from utils import proc_line, find_filename
-from dataset import get_itemset, get_itemset_topk
+from dataset import get_itemset, get_itemset_topk, topK_itemset
 from itemcf_model import sim, topK
 
 track_set = set()                 # [trackId, trackId, ...]
@@ -237,7 +237,7 @@ def stat_co_rated_num():
     fo_item_voted.write(string)
     fo_item_voted.close()
 
-def calc_similarity():
+def calc_similarity(co_rated_dir):
     item_item_sim_file_out = os.path.join(store_dir, item_item_sim_data)
     if os.path.isfile(item_item_sim_file_out):
         print 'File \'%s\' exists.' % item_item_sim_file_out
@@ -245,7 +245,6 @@ def calc_similarity():
     fo_item_item_sim = open(item_item_sim_file_out, 'w') # for saving similarity
     # calculate final similarity matrix item_item_sim_dict
     # 假设统计数据一共保存在n个文件中,则按itemId的顺序每次计算max_size个item与其他item的相似度并写入文件
-    co_rated_dir = os.path.join(store_dir, co_rated_temp_dir)
     co_rated_files = []
     for parent,dirnames,filenames in os.walk(co_rated_dir):
         for filename in filenames:
@@ -303,10 +302,17 @@ def calc_similarity():
         # 将这部分数据写入文件
         item_item_sim_dict = {}
         for itemIdi, related_items in co_rated_dict.items():
+            max_sim = 0.0
             for itemIdj, co_rated_num in related_items.items():
                 if not item_item_sim_dict.has_key(itemIdi):
                     item_item_sim_dict[itemIdi] = {}
                 item_item_sim_dict[itemIdi][itemIdj] = co_rated_num / math.sqrt(item_voted_dict[itemIdi] * item_voted_dict[itemIdj])
+                if item_item_sim_dict[itemIdi][itemIdj] > max_sim:
+                    max_sim = item_item_sim_dict[itemIdi][itemIdj]
+            # normalize
+            for itemIdj in item_item_sim_dict[itemIdi]:
+                item_item_sim_dict[itemIdi][itemIdj] /= max_sim
+
         item_item_sim_list = sorted(item_item_sim_dict.items(), key=lambda x:x[0])
         last_itemId = startId - 1
         for itemi in item_item_sim_list:
@@ -336,7 +342,71 @@ def calc_similarity():
 
 def preproc_item_item_sim():
     stat_co_rated_num()
-    calc_similarity()
+    co_rated_dir = os.path.join(store_dir, co_rated_temp_dir)
+    calc_similarity(co_rated_dir)
+
+# 统计共现矩阵,忽略评分超过1000条的用户,对剩余的用户只取前50条评分进行计算
+def stat_co_rated_num2():
+    co_rated_dir = os.path.join(store_dir, co_rated_temp_dir + '2')
+    if not os.path.isdir(co_rated_dir):
+        os.mkdir(co_rated_dir)
+    if os.listdir(co_rated_dir):
+        print 'Directory \'%s\' not empty.' % co_rated_dir
+        return
+    # calculate co-rated users between items
+    co_rated_dict = dict()   # item-item co-rated matrix
+    item_voted_dict = dict() # number that each item was voted
+    for userId in range(nUsers):
+        if not userId % 2000:
+            print 'current userId: %d' % userId
+        if len(co_rated_dict) > max_size: # 为了防止内存溢出,将这部分数据写入文件
+            co_rated_list = sorted(co_rated_dict.items(), key=lambda x:x[0]) # 按itemId值排序,方便查找
+            filename = find_filename(co_rated_dir, co_rated_data_prefix)
+            fo_co_rated = open(filename, 'w')
+            for item in co_rated_list:
+                itemIdi = item[0]
+                related_items = item[1]
+                string = str(itemIdi) + ':'
+                for itemIdj, co_rated_num in related_items.items():
+                    string += str(itemIdj) + ',' + str(co_rated_num) + ';'
+                string += '\n'
+                fo_co_rated.write(string)
+            fo_co_rated.close()
+            co_rated_dict = {} # 清空字典
+        itemset = get_itemset(userId)
+        if len(itemset) > 1000:
+            continue
+        itemset = topK_itemset(itemset, topK)
+        for itemi in itemset:
+            itemIdi = itemi[0]
+            if not item_voted_dict.has_key(itemIdi):
+                item_voted_dict[itemIdi] = 0
+            item_voted_dict[itemIdi] += 1
+            for itemj in itemset:
+                itemIdj = itemj[0]
+                if itemIdi == itemIdj:
+                    continue
+                if not co_rated_dict.has_key(itemIdi):
+                    co_rated_dict[itemIdi] = dict()
+                if not co_rated_dict[itemIdi].has_key(itemIdj):
+                    co_rated_dict[itemIdi][itemIdj] = 0
+                co_rated_dict[itemIdi][itemIdj] += 1
+    item_voted_file_out = os.path.join(co_rated_dir, item_voted_data)
+    fo_item_voted = open(item_voted_file_out, 'w')
+    item_voted_list = sorted(item_voted_dict.items(), key=lambda x:x[0])
+    string = ''
+    for item in item_voted_list:
+        itemId = item[0]
+        votedNum = item[1]
+        string += str(itemId) + ':' + str(votedNum) + ';'
+    string += '\n'
+    fo_item_voted.write(string)
+    fo_item_voted.close()
+
+def preproc_item_item_sim2():
+    stat_co_rated_num2()
+    co_rated_dir = os.path.join(store_dir, co_rated_temp_dir + '2')
+    calc_similarity(co_rated_dir)
 
 
 if __name__ == '__main__':
@@ -355,4 +425,6 @@ if __name__ == '__main__':
     preproc_item_user()
 
     # 预处理生成并保存item-item的相似度
-    preproc_item_item_sim()
+    # preproc_item_item_sim()
+
+    preproc_item_item_sim2()

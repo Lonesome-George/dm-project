@@ -9,13 +9,13 @@ from base import source_dir, store_dir
 from utils import proc_line
 from itemcf_model import predict
 
-# test_file = 'testIdx2.txt'
+test_file = 'testIdx2.txt'
 # test_file = './testSet/test50.txt'
-test_file = './testSet/test4000.txt'
+# test_file = './testSet/test4000.txt'
 
 def test_prec():
-    # test_file_in = os.path.join(source_dir, test_file)
-    test_file_in = test_file
+    test_file_in = os.path.join(source_dir, test_file)
+    # test_file_in = test_file
     fi_test = open(test_file_in, 'r')
     total_num_of_testCases = 0
     right_num_of_testCases = 0
@@ -53,6 +53,8 @@ def test_prec():
                 predCases = []
                 line_is_score = False
                 print 'done with user ', userId
+                if userId >= 1000:
+                    break
     fi_test.close()
     print 'precision: ' + str(right_num_of_testCases / total_num_of_testCases)
 

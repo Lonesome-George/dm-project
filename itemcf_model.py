@@ -23,7 +23,8 @@ def predict(userId, itemId):
         itemId2 = item[0]
         score = item[1]
         # pred_score += sim(itemId, itemId2) * (1+score)**gamma
-        pred_score += get_simVal(itemId, itemId2) * (1+score)**gamma
+        simVal = get_simVal(itemId, itemId2)
+        pred_score += simVal * (1+score)**gamma
     return pred_score
 
 if __name__ == '__main__':

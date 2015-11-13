@@ -30,4 +30,3 @@ nUsers = 249012
 nItems = 296111
 
 max_size  = 5000
-half_size = max_size / 2
