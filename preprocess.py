@@ -341,56 +341,43 @@ def calc_similarity(co_rated_dir):
     fo_item_item_sim.close()
 
 def preproc_item_item_sim():
-    stat_co_rated_num()
     co_rated_dir = os.path.join(store_dir, co_rated_temp_dir)
+    stat_co_rated_num(co_rated_dir)
     calc_similarity(co_rated_dir)
 
-# 统计共现矩阵,忽略评分超过1000条的用户,对剩余的用户只取前50条评分进行计算
-def stat_co_rated_num2():
-    co_rated_dir = os.path.join(store_dir, co_rated_temp_dir + '2')
-    if not os.path.isdir(co_rated_dir):
-        os.mkdir(co_rated_dir)
-    if os.listdir(co_rated_dir):
-        print 'Directory \'%s\' not empty.' % co_rated_dir
-        return
-    # calculate co-rated users between items
-    co_rated_dict = dict()   # item-item co-rated matrix
-    item_voted_dict = dict() # number that each item was voted
-    for userId in range(nUsers):
-        if not userId % 2000:
-            print 'current userId: %d' % userId
-        if len(co_rated_dict) > max_size: # 为了防止内存溢出,将这部分数据写入文件
-            co_rated_list = sorted(co_rated_dict.items(), key=lambda x:x[0]) # 按itemId值排序,方便查找
-            filename = find_filename(co_rated_dir, co_rated_data_prefix)
-            fo_co_rated = open(filename, 'w')
-            for item in co_rated_list:
-                itemIdi = item[0]
-                related_items = item[1]
-                string = str(itemIdi) + ':'
-                for itemIdj, co_rated_num in related_items.items():
-                    string += str(itemIdj) + ',' + str(co_rated_num) + ';'
-                string += '\n'
-                fo_co_rated.write(string)
-            fo_co_rated.close()
-            co_rated_dict = {} # 清空字典
-        itemset = get_itemset(userId)
-        if len(itemset) > 1000:
-            continue
-        itemset = topK_itemset(itemset, topK)
-        for itemi in itemset:
-            itemIdi = itemi[0]
-            if not item_voted_dict.has_key(itemIdi):
-                item_voted_dict[itemIdi] = 0
-            item_voted_dict[itemIdi] += 1
-            for itemj in itemset:
-                itemIdj = itemj[0]
-                if itemIdi == itemIdj:
-                    continue
-                if not co_rated_dict.has_key(itemIdi):
-                    co_rated_dict[itemIdi] = dict()
-                if not co_rated_dict[itemIdi].has_key(itemIdj):
-                    co_rated_dict[itemIdi][itemIdj] = 0
-                co_rated_dict[itemIdi][itemIdj] += 1
+# save co_rated dict to a file
+def save_co_rated_dict(co_rated_dir, co_rated_dict):
+    co_rated_list = sorted(co_rated_dict.items(), key=lambda x:x[0]) # 按itemId值排序,方便查找
+    filename = find_filename(co_rated_dir, co_rated_data_prefix)
+    fo_co_rated = open(filename, 'w')
+    for item in co_rated_list:
+        itemIdi = item[0]
+        related_items = item[1]
+        string = str(itemIdi) + ':'
+        for itemIdj, co_rated_num in related_items.items():
+            string += str(itemIdj) + ',' + str(co_rated_num) + ';'
+        string += '\n'
+        fo_co_rated.write(string)
+    fo_co_rated.close()
+
+# stat co_rated items
+def stat_co_rated_item(itemset, item_voted_dict, co_rated_dict):
+    for itemi in itemset:
+        itemIdi = itemi[0]
+        if not item_voted_dict.has_key(itemIdi):
+            item_voted_dict[itemIdi] = 0
+        item_voted_dict[itemIdi] += 1
+        for itemj in itemset:
+            itemIdj = itemj[0]
+            if itemIdi == itemIdj:
+                continue
+            if not co_rated_dict.has_key(itemIdi):
+                co_rated_dict[itemIdi] = dict()
+            if not co_rated_dict[itemIdi].has_key(itemIdj):
+                co_rated_dict[itemIdi][itemIdj] = 0
+            co_rated_dict[itemIdi][itemIdj] += 1
+
+def save_item_voted(co_rated_dir, item_voted_dict):
     item_voted_file_out = os.path.join(co_rated_dir, item_voted_data)
     fo_item_voted = open(item_voted_file_out, 'w')
     item_voted_list = sorted(item_voted_dict.items(), key=lambda x:x[0])
@@ -403,9 +390,34 @@ def stat_co_rated_num2():
     fo_item_voted.write(string)
     fo_item_voted.close()
 
+# 统计共现矩阵,忽略评分超过1000条的用户,对剩余的用户只取前50条评分进行计算
+def stat_co_rated_num2(co_rated_dir):
+    if not os.path.isdir(co_rated_dir):
+        os.mkdir(co_rated_dir)
+    if os.listdir(co_rated_dir):
+        print 'Directory \'%s\' not empty.' % co_rated_dir
+        return
+    # calculate co-rated users between items
+    co_rated_dict = dict()   # item-item co-rated matrix
+    item_voted_dict = dict() # number that each item was voted
+    for userId in range(nUsers):
+        if not userId % 2000:
+            print 'current userId: %d' % userId
+        if len(co_rated_dict) > max_size: # 为了防止内存溢出,将这部分数据写入文件
+            save_co_rated_dict(co_rated_dir, co_rated_dict)
+            co_rated_dict = {} # 清空字典
+        itemset = get_itemset(userId)
+        if len(itemset) > 1000:
+            continue
+        itemset = topK_itemset(itemset, topK)
+        # 统计共现项目
+        stat_co_rated_item(itemset, co_rated_dict, item_voted_dict)
+    save_item_voted(co_rated_dir, item_voted_dict)
+    item_voted_dict = {}
+
 def preproc_item_item_sim2():
-    stat_co_rated_num2()
     co_rated_dir = os.path.join(store_dir, co_rated_temp_dir + '2')
+    stat_co_rated_num2(co_rated_dir)
     calc_similarity(co_rated_dir)
 
 
