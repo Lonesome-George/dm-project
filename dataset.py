@@ -10,8 +10,8 @@ user_item_lines = '' # 'user_item.txt'文件内容
 item_user_lines = '' # 'item_user.txt'文件内容
 item_item_sim_lines = '' # 'item_item_sim.txt'文件内容
 user_item_dict = {}
-item_user_dict = {}
 item_item_sim_dict = {}
+item_user_dict = {}
 
 # 从文件中的userId项开始加载size项
 def load_itemset(userId, size):

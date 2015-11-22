@@ -306,7 +306,9 @@ def calc_similarity(co_rated_dir):
             for itemIdj, co_rated_num in related_items.items():
                 if not item_item_sim_dict.has_key(itemIdi):
                     item_item_sim_dict[itemIdi] = {}
-                item_item_sim_dict[itemIdi][itemIdj] = co_rated_num / math.sqrt(item_voted_dict[itemIdi] * item_voted_dict[itemIdj])
+                item_item_sim_dict[itemIdi][itemIdj] = co_rated_num / \
+                                                       (item_voted_dict[itemIdi] + item_voted_dict[itemIdj] - co_rated_num)
+                                                       # math.sqrt(item_voted_dict[itemIdi] * item_voted_dict[itemIdj])
                 if item_item_sim_dict[itemIdi][itemIdj] > max_sim:
                     max_sim = item_item_sim_dict[itemIdi][itemIdj]
             # normalize
@@ -425,6 +427,6 @@ if __name__ == '__main__':
     preproc_item_user()
 
     # 预处理生成并保存item-item的相似度
-    # preproc_item_item_sim()
+    preproc_item_item_sim()
 
-    preproc_item_item_sim2()
+    # preproc_item_item_sim2()

@@ -30,3 +30,5 @@ nUsers = 249012
 nItems = 296111
 
 max_size  = 5000
+
+ISOTIMEFORMAT = '%Y-%m-%d %X'
