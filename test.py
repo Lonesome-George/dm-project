@@ -3,6 +3,8 @@
 import os
 from base import *
 from db_utils_v2 import connect_db
+import logging
+import logging.config
 
 stat_dir = os.path.join(store_dir, 'stat')
 
@@ -12,7 +14,7 @@ def get_votes(userId, conn):
     cursor.execute("SELECT iid, score FROM train WHERE uid=?", (userId,))
     return cursor.fetchall()
 
-if __name__ == '__main__':
+def stat():
     if not os.path.isdir(stat_dir):
         os.mkdir(stat_dir)
     m_db_train = "./data/kddcup2011_train.db"
@@ -24,3 +26,20 @@ if __name__ == '__main__':
         string = str(userId) + ',' + str(len(votes)) + '\n'
         fo.write(string)
     fo.close()
+
+def test_log():
+    #日志初始化
+    LOG_FILENAME = 'logging.conf'
+    logging.config.fileConfig(LOG_FILENAME)
+    logger = logging.getLogger("simple_log_example")
+
+    #测试代码
+    logger.debug("debug message")
+    logger.info("info message")
+    logger.warn("warn message")
+    logger.error("error message")
+    logger.critical("critical message")
+
+
+if __name__ == '__main__':
+    test_log()

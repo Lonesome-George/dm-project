@@ -43,6 +43,12 @@ def get_rated_num(iid, conn):
         rated_num += record[0]
     return rated_num
 
+def get_itemset(uid):
+    cursor = conn_train.cursor()
+    cursor.execute("SELECT iid,score FROM train WHERE uid=?", (uid,))
+    itemset = cursor.fetchall()
+    return itemset
+
 def get_itemset_topk(uid, topK):
     cursor = conn_train.cursor()
     cursor.execute("SELECT iid,score FROM train WHERE uid=?", (uid,))
@@ -51,9 +57,23 @@ def get_itemset_topk(uid, topK):
     itemset = record_list[0:topK]
     return itemset
 
-def get_simVal(iid1, iid2, conn):
+def get_userset(iid):
+    cursor = conn_train.cursor()
+    cursor.execute("SELECT uid,score FROM train WHERE iid=?", (iid,))
+    userset = cursor.fetchall()
+    return userset
+
+def get_userset_topk(iid, topK):
+    cursor = conn_train.cursor()
+    cursor.execute("SELECT uid,score FROM train WHERE iid=?", (iid,))
+    records = cursor.fetchall()
+    record_list = sorted(records, key=lambda x:x[1], reverse=True)
+    userset = record_list[0:topK]
+    return userset
+
+def get_simVal(iid1, iid2, sim_table, conn):
     cursor = conn.cursor()
-    cursor.execute("SELECT sim_val FROM sim WHERE iid1=? and iid2=?", (iid1,iid2))
+    cursor.execute("SELECT sim_val FROM %s WHERE iid1=? and iid2=?" % sim_table, (iid1,iid2))
     records = cursor.fetchall()
     sim_val = 0.0
     for record in records:

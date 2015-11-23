@@ -31,4 +31,16 @@ nItems = 296111
 
 max_size  = 5000
 
+# -------database--------
+# item共现表
+co_rated_table = "co_rated"
+# item评分表
+item_rated_table = "item_rated"
+# 简单相似度表
+simple_sim_table = "simple_sim"
+# 余弦相似度表
+cos_sim_table = "cos_sim"
+# 相似度类型
+sim_tables = [simple_sim_table, cos_sim_table]
+
 ISOTIMEFORMAT = '%Y-%m-%d %X'
