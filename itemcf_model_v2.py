@@ -5,13 +5,13 @@ from base import *
 from dataset_v2 import get_itemset, get_itemset_topk, get_simVal
 from db_utils_v2 import connect_db
 
-topItems  = 50
+topKItems  = 50
 gamma_1 = 0.65
 gamma_2 = 0.15
 
 # 预测评分
 def predict_1(userId, itemId, sim_table, db_conn):
-    itemset = get_itemset_topk(userId, topItems)
+    itemset = get_itemset_topk(userId, topKItems)
     # itemset = get_itemset(userId)
     pred_score = 0
     for item in itemset:

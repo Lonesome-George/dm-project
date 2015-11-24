@@ -2,37 +2,45 @@
 
 #迭代训练调参
 
-import logging
-import logging.config
-import time
-from base import store_dir, sim_tables, ISOTIMEFORMAT
-from utils import find_filename
-from db_utils_v2 import connect_db
-from preprocess_v2 import preproc_main
-from test_prec_v2 import test_prec
+import os
+from base import *
+from utils import find_dirname
+from preprocess import preproc_main
+from itemcf_model import test_model
+from test_prec import test_prec
 
-logger = None
+def train():
+    topKs = [50, 75, 100]
+    topNs = [50, 75] # 预测的时候对每个用户所选取的top item数目
+    co_rated_dir_prefix = "co_rated_dir"
+    for topK in topKs:
+        co_rated_dir = find_dirname(store_dir, '%s.tk%d' %(co_rated_dir_prefix, topK))
+        logger.info('topK: %d.' %(topK))
+        logger.info('Start preprocess')
+        preproc_main(co_rated_dir, topK)
+        logger.info('End preprocess.')
+        for topN in topKs:
+            logger.info('Start test model')
+            test_model(co_rated_dir, topN)
+            logger.info('End test model')
+            logger.info('Start predict.')
+            prec = test_prec(co_rated_dir, topN)
+            logger.info('End predict(precision: %f).' % prec)
 
-def init_log():
-    global logger
-    LOG_FILENAME = 'logging.conf'
-    logging.config.fileConfig(LOG_FILENAME)
-    logger = logging.getLogger("TRAIN")
+# 测试不同参数的效果
+def test_param():
+    topKs = [50, 75, 100] # 训练的时候对每个用户所选取的top item数目
+    topNs = [50, 75] # 预测的时候对每个用户所选取的top item数目
+    co_rated_dir_prefix = "co_rated_dir"
+    for topK in topKs:
+        co_rated_dir = os.path.join(store_dir, '%s.tk%d_1' %(co_rated_dir_prefix, topK))
+        for topN in topNs:
+            logger.info('Start test model')
+            test_model(co_rated_dir, topN)
+            logger.info('End test model')
+            logger.info('Start predict.')
+            prec = test_prec(co_rated_dir, topN)
+            logger.info('End predict(precision: %f).' % prec)
 
 if __name__ == '__main__':
-    init_log()
-    trainsizes = [10000, 50000, 100000, 300000]
-    topKs = [50, 75, 100]
-    db_prefix = "kddcup2011_sim.db"
-    for trainsize in trainsizes:
-        for topK in topKs:
-            db_sim_file = find_filename(store_dir, '%s.ts%d.tk%d' %(db_prefix, trainsize, topK))
-            db_conn, db_cursor = connect_db(db_sim_file)
-            logger.info('trainsize: %d,topK: %d.' %(trainsize, topK))
-            logger.info('Start preprocess')
-            preproc_main(trainsize, topK, db_conn, db_cursor)
-            end_time = time.strftime(ISOTIMEFORMAT, time.localtime(time.time()))
-            logger.info('End preprocess.')
-            logger.info('Start test.')
-            prec = test_prec(sim_tables[0], db_conn)
-            logger.info('End test(precision: %f).' % prec)
+    test_param()

@@ -107,10 +107,10 @@ def get_userset(itemId):
         load_userset(itemId, load_size)
     return item_user_dict[itemId]
 
-def load_simset(itemId, size):
+def load_simset(co_rated_dir, itemId, size):
     global item_item_sim_lines
     if item_item_sim_lines == '':
-        item_item_sim_file_in = os.path.join(store_dir, item_item_sim_data)
+        item_item_sim_file_in = os.path.join(co_rated_dir, item_item_sim_data)
         fi_item_item_sim = open(item_item_sim_file_in, 'r')
         item_item_sim_lines = fi_item_item_sim.readlines()
         fi_item_item_sim.close()
@@ -135,14 +135,14 @@ def load_simset(itemId, size):
             simVal = float(sp_list[1])
             item_item_sim_dict[iId1][iId2] = simVal
 
-def get_simVal(itemId1, itemId2):
+def get_simVal(co_rated_dir, itemId1, itemId2):
     itemId_min = min(itemId1, itemId2)
     itemId_max = max(itemId1, itemId2)
     global item_item_sim_dict
     if not item_item_sim_dict.has_key(itemId_min):
         if len(item_item_sim_dict) >= max_size:
             item_item_sim_dict = {}
-        load_simset(itemId_min, load_size)
+        load_simset(co_rated_dir, itemId_min, load_size)
     if not item_item_sim_dict.has_key(itemId_min): # 加载结束依然没有该key,说明该项与Id大于它的所有项的相似度都为0
         return 0.0
     if not item_item_sim_dict[itemId_min].has_key(itemId_max):

@@ -5,17 +5,14 @@
 from __future__ import division
 import os
 import time
-from base import source_dir, store_dir
+from base import *
 from utils import proc_line
-from itemcf_model import predict
+from itemcf_model import predict_1, predict_2
 
 test_file = 'testIdx2.txt'
-# test_file = './testSet/test50.txt'
-# test_file = './testSet/test4000.txt'
 
-def test_prec():
+def test_prec(co_rated_dir, topN):
     test_file_in = os.path.join(source_dir, test_file)
-    # test_file_in = test_file
     fi_test = open(test_file_in, 'r')
     total_num_of_testCases = 0
     right_num_of_testCases = 0
@@ -40,7 +37,8 @@ def test_prec():
             itemId = int(seg_list[0])
             score = int(seg_list[1])
             testCases[itemId] = score
-            pred_score = predict(userId, itemId)
+            # pred_score = predict_1(co_rated_dir, userId, itemId)
+            pred_score = predict_2(co_rated_dir, userId, itemId, topN)
             predCases[cur_testCase] = [itemId, pred_score]
             cur_testCase += 1
             if cur_testCase >= num_of_testCases:
@@ -52,17 +50,22 @@ def test_prec():
                         right_num_of_testCases += 2
                 predCases = []
                 line_is_score = False
-                print 'done with user ', userId
-                if userId >= 1000:
+                print 'done with user: %d' % userId
+                if userId >= 50:
                     break
     fi_test.close()
-    print 'precision: ' + str(right_num_of_testCases / total_num_of_testCases)
+    logger.info("similarity file:%s" % co_rated_dir)
+    logger.info("test data size: %d|topN:%d" % (userId, topN))
+    prec = right_num_of_testCases / total_num_of_testCases
+    logger.info("precision: %f" % (prec))
+    return prec
 
 
 ISOTIMEFORMAT = '%Y-%m-%d %X'
 
 if __name__ == '__main__':
     start_time = time.strftime(ISOTIMEFORMAT, time.localtime(time.time()))
-    test_prec()
+    prec = test_prec('./data/co_rated_dir.tk100_1', 30)
+    print "precision: %f" %(prec)
     end_time = time.strftime(ISOTIMEFORMAT, time.localtime(time.time()))
     print 'start at ', start_time, ',end at ', end_time, '.'
