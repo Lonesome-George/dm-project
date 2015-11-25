@@ -26,10 +26,12 @@ co_rated_dir_prefix = 'co_rated' # co_rated dir prefix
 co_rated_data_prefix = 'co_rated'
 item_voted_data = 'item_voted'
 
+result_dir = './result'
+
 nUsers = 249012
 nItems = 296111
 
-max_size  = 10000
+max_size  = 5000
 
 # -------database--------
 # item共现表

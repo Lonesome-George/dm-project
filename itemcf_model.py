@@ -28,6 +28,16 @@ def predict_1(co_rated_dir, userId, itemId):
     return pred_score
 
 def predict_2(co_rated_dir, userId, itemId, topN):
+    itemset = get_itemset_topk(userId, topN)
+    pred_score = 0
+    for item in itemset:
+        itemId2 = item[0]
+        score = item[1]
+        simVal = get_simVal(co_rated_dir, itemId, itemId2)
+        pred_score += simVal * (1+score)**gamma
+    return pred_score
+
+def predict_3(co_rated_dir, userId, itemId, topN):
     itemset = get_itemset(userId)
     simset = []
     for item in itemset:
@@ -51,7 +61,7 @@ def test_model(co_rated_dir, topN):
         s = '[predict_1]%d => %d: %f' %(userId, case, pred_score)
         print s
         logger.info(s)
-        pred_score = predict_2(co_rated_dir, userId, case, topN)
+        pred_score = predict_3(co_rated_dir, userId, case, topN)
         s = '[predict_2]%d => %d: %f' %(userId, case, pred_score)
         print s
         logger.info(s)
