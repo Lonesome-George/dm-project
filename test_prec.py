@@ -60,7 +60,7 @@ def test_prec(co_rated_dir, topN):
                 predCases = []
                 line_is_score = False
                 print 'done with user: %d' % userId
-                if userId >= 10000:
+                if userId >= 1000:
                     break
     fi_test.close()
     logger.info("similarity file:%s" % co_rated_dir)
